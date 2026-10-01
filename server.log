@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Library/Frame::1 - - [01/Oct/2026 12:49:17] "GET / HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:17] "GET /manifest.webmanifest HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:17] "GET /sw.js HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:17] "GET /icon.svg HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:30] "GET / HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:31] "GET /styles.css HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:31] "GET /script.js HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:31] "GET /manifest.webmanifest HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:31] "GET /script.js HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:31] "GET /styles.css HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:31] "GET /manifest.webmanifest HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:31] "GET /script.js HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:32] "GET /sw.js HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:32] "GET /index.html HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:32] "GET /sw.js HTTP/1.1" 200 -
+::1 - - [01/Oct/2026 12:49:32] "GET /icon.svg HTTP/1.1" 200 -

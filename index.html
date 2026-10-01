@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="A calm pomodoro-style countdown timer for work and rest.">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Flow Timer</title>
+</head>
+
+<body data-theme="dark">
+    <div id="splashScreen" class="splash-screen" aria-live="polite">
+        <div class="splash-card">
+            <div class="splash-icon">🧘‍♀️</div>
+            <h1>Flow Timer</h1>
+            <p>Slow down. Breathe. Focus.</p>
+        </div>
+    </div>
+
+    <div id="offlineBanner" class="offline-banner hidden" role="status" aria-live="polite">
+        Offline mode active — your timer still works.
+    </div>
+
+    <main class="app-shell">
+        <section class="timer-panel">
+            <header class="top-bar">
+                <div class="brand-block">
+                    <span class="brand-mark">◎</span>
+                    <span class="brand-name">Flow</span>
+                </div>
+
+                <div class="header-actions">
+                    <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle theme">☀️</button>
+                    <button id="focusToggle" class="icon-button" type="button"
+                        aria-label="Toggle focus mode">Focus</button>
+                </div>
+            </header>
+
+            <div class="timer-card">
+                <div class="status-row">
+                    <span class="status-label">Focus Session</span>
+                </div>
+
+                <button id="timeDisplay" class="time-display" type="button" aria-label="Edit timer duration">
+                    20:00
+                </button>
+
+                <svg class="progress-ring" width="260" height="260" viewBox="0 0 220 220" aria-hidden="true">
+                    <circle class="ring-bg" cx="110" cy="110" r="100"></circle>
+                    <circle id="progressCircle" class="ring-progress" cx="110" cy="110" r="100"></circle>
+                </svg>
+
+                <div class="session-row">
+                    <span>Sessions</span>
+                    <strong id="sessionCount">0</strong>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="startBtn" class="primary-button" type="button">Start</button>
+                <button id="stopBtn" class="secondary-button" type="button">Stop</button>
+                <button id="resetBtn" class="secondary-button" type="button">Reset</button>
+                <button id="muteBtn" class="secondary-button" type="button">🔊 Sound On</button>
+            </div>
+
+            <div class="toggle-row">
+                <button id="phaseToggle" class="mode-button" type="button" aria-pressed="true">Work</button>
+                <button id="modeToggle" class="mode-button" type="button" aria-pressed="false">24h Mode</button>
+            </div>
+
+            <div class="settings-panel">
+                <label class="field-group">
+                    <span>Break Length (min)</span>
+                    <input id="breakMinutesInput" type="number" min="1" max="60" value="5">
+                </label>
+
+                <label class="field-group">
+                    <span>Sound</span>
+                    <select id="soundPicker">
+                        <option value="classic">Classic</option>
+                        <option value="chime">Chime</option>
+                        <option value="pulse">Pulse</option>
+                    </select>
+                </label>
+
+                <div class="custom-timer-panel">
+                    <div class="panel-header">
+                        <span>Custom 24h Timer</span>
+                    </div>
+                    <div id="customPanel" class="custom-panel hidden">
+                        <div class="time-inputs">
+                            <label>
+                                <span>H</span>
+                                <input id="hoursInput" type="number" min="0" max="23" value="0">
+                            </label>
+                            <label>
+                                <span>M</span>
+                                <input id="minutesInput" type="number" min="0" max="59" value="20">
+                            </label>
+                            <label>
+                                <span>S</span>
+                                <input id="secondsInput" type="number" min="0" max="59" value="0">
+                            </label>
+                        </div>
+                        <button id="savePresetBtn" class="save-button" type="button">Save preset</button>
+                    </div>
+                </div>
+
+                <div class="preset-panel">
+                    <div class="panel-header">
+                        <span>Quick presets</span>
+                    </div>
+                    <div class="preset-row">
+                        <button class="preset-button is-active" type="button" data-minutes="20">20 min</button>
+                        <button class="preset-button" type="button" data-minutes="25">25 min</button>
+                        <button class="preset-button" type="button" data-minutes="45">45 min</button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="installBtn" class="install-button" type="button" style="display:none;">Install app</button>
+        </section>
+    </main>
+
+    <div id="customTimeEditor" class="custom-time-editor hidden" aria-modal="true" role="dialog"
+        aria-labelledby="customTimerTitle">
+        <div class="editor-card">
+            <div class="editor-header">
+                <h2 id="customTimerTitle">Set timer</h2>
+                <button id="closeTimeEditor" class="close-button" type="button"
+                    aria-label="Close timer editor">×</button>
+            </div>
+
+            <div class="time-inputs compact">
+                <label>
+                    <span>H</span>
+                    <input id="editorHours" type="number" min="0" max="23" value="0">
+                </label>
+                <label>
+                    <span>M</span>
+                    <input id="editorMinutes" type="number" min="0" max="59" value="20">
+                </label>
+                <label>
+                    <span>S</span>
+                    <input id="editorSeconds" type="number" min="0" max="59" value="0">
+                </label>
+            </div>
+
+            <div class="editor-actions">
+                <button id="cancelTimerBtn" class="secondary-button" type="button">Cancel</button>
+                <button id="applyTimerBtn" class="primary-button" type="button">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+
+</html>
