@@ -27,6 +27,7 @@ const editorSeconds = document.getElementById('editorSeconds');
 const applyTimerBtn = document.getElementById('applyTimerBtn');
 const cancelTimerBtn = document.getElementById('cancelTimerBtn');
 const closeTimeEditor = document.getElementById('closeTimeEditor');
+const updateBanner = document.getElementById('updateBanner');
 
 const DEFAULT_WORK_MINUTES = 20;
 const DEFAULT_BREAK_MINUTES = 5;
@@ -570,6 +571,38 @@ function applyCustomTime() {
   startBtn.textContent = 'Start';
   updateDisplay();
   closeEditor();
+}
+
+function refreshAppIfNeeded() {
+  if (updateBanner) {
+    updateBanner.classList.remove('hidden');
+    setTimeout(() => {
+      window.location.reload();
+    }, 1200);
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then((registration) => {
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            refreshAppIfNeeded();
+          }
+        });
+      });
+    }).catch(() => undefined);
+  });
+
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'UPDATE_READY') {
+      refreshAppIfNeeded();
+    }
+  });
 }
 
 window.addEventListener('beforeinstallprompt', (event) => {

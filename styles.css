@@ -520,6 +520,27 @@ input:focus-visible {
   display: none;
 }
 
+.update-banner {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  background: rgba(20, 30, 38, 0.92);
+  color: #ecf5f4;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+.update-banner.hidden {
+  display: none;
+}
+
 .custom-time-editor {
   position: absolute;
   inset: 12% 10% auto;

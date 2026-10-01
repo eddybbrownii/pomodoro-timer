@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flow-timer-v1';
+const CACHE_NAME = 'flow-timer-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -30,6 +30,12 @@ self.addEventListener ('activate', event => {
   self.clients.claim ();
 });
 
+self.addEventListener ('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting ();
+  }
+});
+
 self.addEventListener ('fetch', event => {
   if (event.request.method !== 'GET') return;
 
@@ -52,4 +58,10 @@ self.addEventListener ('fetch', event => {
       });
     })
   );
+});
+
+self.addEventListener ('controllerchange', () => {
+  self.clients.matchAll ().then (clients => {
+    clients.forEach (client => client.postMessage ({type: 'UPDATE_READY'}));
+  });
 });
