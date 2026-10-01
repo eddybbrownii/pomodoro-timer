@@ -28,6 +28,10 @@ const applyTimerBtn = document.getElementById('applyTimerBtn');
 const cancelTimerBtn = document.getElementById('cancelTimerBtn');
 const closeTimeEditor = document.getElementById('closeTimeEditor');
 const updateBanner = document.getElementById('updateBanner');
+const backgroundUrlInput = document.getElementById('backgroundUrlInput');
+const applyBackgroundBtn = document.getElementById('applyBackgroundBtn');
+const backgroundUploadInput = document.getElementById('backgroundUploadInput');
+const resetBackgroundBtn = document.getElementById('resetBackgroundBtn');
 
 const DEFAULT_WORK_MINUTES = 20;
 const DEFAULT_BREAK_MINUTES = 5;
@@ -582,6 +586,47 @@ function refreshAppIfNeeded() {
   }
 }
 
+function setBackgroundImage(imageUrl) {
+  const safeUrl = imageUrl && imageUrl.trim() ? `url("${imageUrl.trim()}")` : 'none';
+  document.documentElement.style.setProperty('--app-background-image', safeUrl);
+}
+
+function applyBackgroundFromUrl() {
+  const imageUrl = backgroundUrlInput.value.trim();
+  if (!imageUrl) {
+    setBackgroundImage('');
+    return;
+  }
+
+  setBackgroundImage(imageUrl);
+}
+
+function applyBackgroundFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const result = typeof event.target?.result === 'string' ? event.target.result : '';
+    backgroundUrlInput.value = result;
+    setBackgroundImage(result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetBackgroundImage() {
+  backgroundUrlInput.value = '';
+  setBackgroundImage('');
+  if (backgroundUploadInput) {
+    backgroundUploadInput.value = '';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  setBackgroundImage('');
+});
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then((registration) => {
@@ -723,6 +768,17 @@ timeDisplay.addEventListener('click', openTimeEditor);
 applyTimerBtn.addEventListener('click', applyCustomTime);
 cancelTimerBtn.addEventListener('click', closeEditor);
 closeTimeEditor.addEventListener('click', closeEditor);
+applyBackgroundBtn.addEventListener('click', applyBackgroundFromUrl);
+backgroundUrlInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    applyBackgroundFromUrl();
+  }
+});
+backgroundUploadInput.addEventListener('change', (event) => {
+  const file = event.target.files?.[0];
+  applyBackgroundFile(file);
+});
+resetBackgroundBtn.addEventListener('click', resetBackgroundImage);
 
 initializeCustomPreset();
 initializeFromStorage();

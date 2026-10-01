@@ -14,6 +14,7 @@
   --ring-track: rgba(255, 255, 255, 0.18);
   --ring-progress: #4dd9c4;
   --page-bg: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  --app-background-image: none;
 }
 
 body[data-theme="dark"] {
@@ -53,6 +54,12 @@ body {
   padding: 24px;
   position: relative;
   overflow: hidden;
+  background-color: black;
+  background-image: var(--app-background-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .background-glow {
@@ -636,4 +643,74 @@ body.focus-mode .sound-picker-wrap {
 
 body.focus-mode .background-glow {
   opacity: 0.28;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  text-align: left;
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.field-group input,
+.field-group select {
+  width: 100%;
+  border: 1px solid rgba(31, 42, 47, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 12px 10px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.background-control {
+  margin-top: 10px;
+}
+
+.background-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.background-input-row input {
+  flex: 1;
+}
+
+.background-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(31, 42, 47, 0.06);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.secondary-button.tiny {
+  min-width: 72px;
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
 }
