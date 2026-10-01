@@ -32,6 +32,9 @@ const backgroundUrlInput = document.getElementById('backgroundUrlInput');
 const applyBackgroundBtn = document.getElementById('applyBackgroundBtn');
 const backgroundUploadInput = document.getElementById('backgroundUploadInput');
 const resetBackgroundBtn = document.getElementById('resetBackgroundBtn');
+const backgroundPreview = document.getElementById('backgroundPreview');
+const backgroundWallpaperToggle = document.getElementById('backgroundWallpaperToggle');
+const backgroundPickerBtn = document.getElementById('backgroundPickerBtn');
 
 const DEFAULT_WORK_MINUTES = 20;
 const DEFAULT_BREAK_MINUTES = 5;
@@ -39,6 +42,7 @@ const DEFAULT_WORK_SECONDS = DEFAULT_WORK_MINUTES * 60;
 const STORAGE_KEY = 'flow-timer-state';
 const CUSTOM_PRESET_KEY = 'flow-timer-custom-preset';
 const CIRCLE_LENGTH = 2 * Math.PI * 100;
+const BACKGROUND_KEY = 'flow-timer-background';
 
 let totalSeconds = DEFAULT_WORK_SECONDS;
 let remainingSeconds = DEFAULT_WORK_SECONDS;
@@ -55,6 +59,8 @@ let customPresetMinutes = null;
 let focusMode = false;
 let soundMode = 'classic';
 let deferredPrompt = null;
+let backgroundImageUrl = '';
+let shouldUseWallpaper = true;
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -586,9 +592,50 @@ function refreshAppIfNeeded() {
   }
 }
 
+function setBackgroundPreview(url) {
+  if (!backgroundPreview) return;
+
+  if (url && url.trim()) {
+    backgroundPreview.style.backgroundImage = `url("${url.trim()}")`;
+    backgroundPreview.style.backgroundColor = 'transparent';
+  } else {
+    backgroundPreview.style.backgroundImage = 'none';
+    backgroundPreview.style.backgroundColor = 'rgba(60, 185, 167, 0.18)';
+  }
+}
+
+function persistBackgroundState() {
+  try {
+    localStorage.setItem(BACKGROUND_KEY, JSON.stringify({
+      imageUrl: backgroundImageUrl,
+      useWallpaper: shouldUseWallpaper
+    }));
+  } catch (error) {
+    // ignore storage errors silently
+  }
+}
+
 function setBackgroundImage(imageUrl) {
-  const safeUrl = imageUrl && imageUrl.trim() ? `url("${imageUrl.trim()}")` : 'none';
-  document.documentElement.style.setProperty('--app-background-image', safeUrl);
+  const cleanUrl = imageUrl && imageUrl.trim() ? imageUrl.trim() : '';
+  backgroundImageUrl = cleanUrl;
+
+  if (!shouldUseWallpaper || !cleanUrl) {
+    document.body.style.background = 'black';
+    document.body.style.backgroundImage = 'none';
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundAttachment = 'fixed';
+  } else {
+    document.body.style.background = `url("${cleanUrl}")`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundAttachment = 'fixed';
+  }
+
+  setBackgroundPreview(cleanUrl);
+  persistBackgroundState();
 }
 
 function applyBackgroundFromUrl() {
@@ -623,8 +670,38 @@ function resetBackgroundImage() {
   }
 }
 
+function applyBackgroundPreference() {
+  shouldUseWallpaper = !!backgroundWallpaperToggle.checked;
+  setBackgroundImage(backgroundImageUrl);
+}
+
+function restoreBackgroundState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(BACKGROUND_KEY) || 'null');
+    if (!saved) {
+      shouldUseWallpaper = true;
+      backgroundWallpaperToggle.checked = true;
+      setBackgroundImage('');
+      return;
+    }
+
+    shouldUseWallpaper = saved.useWallpaper !== false;
+    backgroundWallpaperToggle.checked = shouldUseWallpaper;
+    if (saved.imageUrl) {
+      backgroundUrlInput.value = saved.imageUrl;
+      setBackgroundImage(saved.imageUrl);
+    } else {
+      setBackgroundImage('');
+    }
+  } catch (error) {
+    shouldUseWallpaper = true;
+    backgroundWallpaperToggle.checked = true;
+    setBackgroundImage('');
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-  setBackgroundImage('');
+  restoreBackgroundState();
 });
 
 if ('serviceWorker' in navigator) {
@@ -779,6 +856,10 @@ backgroundUploadInput.addEventListener('change', (event) => {
   applyBackgroundFile(file);
 });
 resetBackgroundBtn.addEventListener('click', resetBackgroundImage);
+backgroundWallpaperToggle.addEventListener('change', applyBackgroundPreference);
+backgroundPickerBtn.addEventListener('click', () => {
+  backgroundUploadInput.click();
+});
 
 initializeCustomPreset();
 initializeFromStorage();

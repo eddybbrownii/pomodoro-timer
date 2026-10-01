@@ -97,11 +97,18 @@
                         <input id="backgroundUrlInput" type="url" placeholder="Paste image URL">
                         <button id="applyBackgroundBtn" class="save-button" type="button">Apply</button>
                     </div>
-                    <div class="background-actions">
-                        <label class="upload-button">
-                            <input id="backgroundUploadInput" type="file" accept="image/*" hidden>
-                            <span>Upload image</span>
+                    <div class="background-preview-wrap">
+                        <span id="backgroundPreview" class="background-preview" title="Background preview"></span>
+                        <label class="background-toggle">
+                            <input id="backgroundWallpaperToggle" type="checkbox" checked>
+                            <span>Use as wallpaper</span>
                         </label>
+                    </div>
+                    <div class="background-actions">
+                        <button id="backgroundPickerBtn" class="upload-button" type="button">
+                            <span>Image Picker</span>
+                        </button>
+                        <input id="backgroundUploadInput" type="file" accept="image/*" hidden>
                         <button id="resetBackgroundBtn" class="secondary-button tiny" type="button">Reset</button>
                     </div>
                 </div>
