@@ -35,6 +35,9 @@ const resetBackgroundBtn = document.getElementById('resetBackgroundBtn');
 const backgroundPreview = document.getElementById('backgroundPreview');
 const backgroundWallpaperToggle = document.getElementById('backgroundWallpaperToggle');
 const backgroundPickerBtn = document.getElementById('backgroundPickerBtn');
+const panelLayoutSelect = document.getElementById('panelLayoutSelect');
+const timerPanel = document.getElementById('timerPanel');
+const stopwatchToggle = document.getElementById('stopwatchToggle');
 
 const DEFAULT_WORK_MINUTES = 20;
 const DEFAULT_BREAK_MINUTES = 5;
@@ -43,6 +46,9 @@ const STORAGE_KEY = 'flow-timer-state';
 const CUSTOM_PRESET_KEY = 'flow-timer-custom-preset';
 const CIRCLE_LENGTH = 2 * Math.PI * 100;
 const BACKGROUND_KEY = 'flow-timer-background';
+const PANEL_POSITION_KEY = 'flow-timer-panel-position';
+const PANEL_LAYOUT_KEY = 'flow-timer-panel-layout';
+const PANEL_LAYOUT_OPTIONS = ['center', 'left', 'right', 'top-left', 'top-right', 'smart'];
 
 let totalSeconds = DEFAULT_WORK_SECONDS;
 let remainingSeconds = DEFAULT_WORK_SECONDS;
@@ -61,6 +67,11 @@ let soundMode = 'classic';
 let deferredPrompt = null;
 let backgroundImageUrl = '';
 let shouldUseWallpaper = true;
+let panelLayout = 'smart';
+let smartPanelSide = 'left';
+
+let dragState = null;
+let isStopwatchMode = false;
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -88,7 +99,8 @@ function persistState() {
     customPresetMinutes,
     currentPresetMinutes: Number(document.querySelector('.preset-button.is-active')?.dataset.minutes ?? DEFAULT_WORK_MINUTES),
     focusMode,
-    soundMode
+    soundMode,
+    isStopwatchMode
   };
 
   try {
@@ -103,7 +115,7 @@ function formatTime(total) {
   const minutes = Math.floor((total % 3600) / 60);
   const seconds = total % 60;
 
-  if (is24HourMode) {
+  if (isStopwatchMode || is24HourMode) {
     return [hours, minutes, seconds]
       .map((unit) => String(unit).padStart(2, '0'))
       .join(':');
@@ -154,7 +166,7 @@ function notifyUser(message) {
 }
 
 function updatePageTitle() {
-  const label = is24HourMode ? '24h' : phase === 'work' ? 'Work' : 'Break';
+  const label = isStopwatchMode ? 'Stopwatch' : is24HourMode ? '24h' : phase === 'work' ? 'Work' : 'Break';
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
   document.title = `${label} • ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -163,11 +175,13 @@ function updatePageTitle() {
 function updateDisplay() {
   timeDisplay.textContent = formatTime(remainingSeconds);
 
-  const displayLabel = is24HourMode
-    ? '24h Countdown'
-    : phase === 'work'
-      ? 'Focus Session'
-      : 'Break Mode';
+  const displayLabel = isStopwatchMode
+    ? 'Stopwatch'
+    : is24HourMode
+      ? '24h Countdown'
+      : phase === 'work'
+        ? 'Focus Session'
+        : 'Break Mode';
 
   document.querySelector('.status-label').textContent = displayLabel;
   phaseToggle.textContent = phase === 'work' ? 'Work' : 'Break';
@@ -176,6 +190,7 @@ function updateDisplay() {
 
   updateProgressRing();
   updatePageTitle();
+  updateModeButtonState();
   persistState();
 }
 
@@ -213,142 +228,57 @@ function clearTimer() {
   }
 }
 
-function beginCountdown() {
-  if (remainingSeconds <= 0 || isRunning) return;
-
-  isRunning = true;
-  timerId = setInterval(() => {
-    if (remainingSeconds > 0) {
-      remainingSeconds -= 1;
-      updateDisplay();
-    }
-
-    if (remainingSeconds <= 0) {
-      clearTimer();
-      isRunning = false;
-      playCompletionTone();
-
-      if (phase === 'work') {
-        sessionCount += 1;
-        phase = 'break';
-        setTimerByMinutes(breakMinutes, true);
-      } else {
-        phase = 'work';
-        setTimerByMinutes(DEFAULT_WORK_MINUTES, true);
-      }
-
-      startBtn.textContent = 'Start';
-      updateDisplay();
-    }
-  }, 1000);
-}
-
-function stopCountdown() {
-  isRunning = false;
-  clearTimer();
-}
-
-function resetTimer() {
-  stopCountdown();
-  startBtn.textContent = 'Start';
-
-  if (is24HourMode) {
-    const customDuration = Number(hoursInput.value || 0) * 3600 + Number(minutesInput.value || 0) * 60 + Number(secondsInput.value || 0);
-    totalSeconds = customDuration > 0 ? customDuration : 0;
-    remainingSeconds = totalSeconds;
-  } else {
-    const resetMinutes = phase === 'work' ? DEFAULT_WORK_MINUTES : breakMinutes;
-    totalSeconds = resetMinutes * 60;
-    remainingSeconds = totalSeconds;
+function updateModeButtonState() {
+  if (phaseToggle) {
+    phaseToggle.classList.toggle('is-active', phase === 'work');
   }
 
+  if (modeToggle) {
+    modeToggle.classList.toggle('is-active', is24HourMode);
+  }
+
+  if (stopwatchToggle) {
+    stopwatchToggle.classList.toggle('is-active', isStopwatchMode);
+  }
+}
+
+function setStopwatchMode(enabled) {
+  isStopwatchMode = enabled;
+  stopwatchToggle.textContent = isStopwatchMode ? 'Stopwatch On' : 'Stopwatch';
+  stopwatchToggle.setAttribute('aria-pressed', String(isStopwatchMode));
+
+  if (isStopwatchMode) {
+    stopCountdown();
+    startBtn.textContent = 'Start';
+    remainingSeconds = 0;
+    totalSeconds = 0;
+    phase = 'work';
+    is24HourMode = false;
+    customPanel.classList.add('hidden');
+    modeToggle.textContent = '24h Mode';
+    modeToggle.setAttribute('aria-pressed', 'false');
+    updateDisplay();
+    updateModeButtonState();
+    return;
+  }
+
+  phase = 'work';
+  const presetMinutes = Number(document.querySelector('.preset-button.is-active')?.dataset.minutes ?? DEFAULT_WORK_MINUTES);
+  setTimerByMinutes(presetMinutes, true);
   updateDisplay();
-}
-
-function ensureAudioContext() {
-  if (!audioContext) {
-    const AudioCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtor) return null;
-    audioContext = new AudioCtor();
-  }
-  return audioContext;
-}
-
-function playTone(frequency, startTime, duration, volume) {
-  if (isMuted) return;
-
-  const context = ensureAudioContext();
-  if (!context) return;
-
-  const oscillator = context.createOscillator();
-  const gainNode = context.createGain();
-
-  oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(frequency, startTime);
-
-  gainNode.gain.setValueAtTime(0.0001, startTime);
-  gainNode.gain.exponentialRampToValueAtTime(volume, startTime + 0.02);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(context.destination);
-
-  oscillator.start(startTime);
-  oscillator.stop(startTime + duration);
-}
-
-function chooseTonePattern() {
-  if (soundMode === 'chime') {
-    return [
-      { frequency: 523.25, offset: 0, duration: 0.16, volume: 0.08 },
-      { frequency: 659.25, offset: 0.18, duration: 0.18, volume: 0.09 },
-      { frequency: 783.99, offset: 0.36, duration: 0.22, volume: 0.1 }
-    ];
-  }
-
-  if (soundMode === 'pulse') {
-    return [
-      { frequency: 330, offset: 0, duration: 0.1, volume: 0.06 },
-      { frequency: 330, offset: 0.12, duration: 0.12, volume: 0.06 },
-      { frequency: 392, offset: 0.24, duration: 0.18, volume: 0.08 },
-      { frequency: 440, offset: 0.42, duration: 0.26, volume: 0.09 }
-    ];
-  }
-
-  return [
-    { frequency: 740, offset: 0, duration: 0.18, volume: 0.08 },
-    { frequency: 880, offset: 0.2, duration: 0.18, volume: 0.09 },
-    { frequency: 1040, offset: 0.4, duration: 0.28, volume: 0.1 }
-  ];
-}
-
-function playCompletionTone() {
-  if (isMuted) return;
-
-  const context = ensureAudioContext();
-  if (!context) return;
-
-  const pattern = chooseTonePattern();
-  const now = context.currentTime;
-
-  pattern.forEach((tone) => {
-    playTone(tone.frequency, now + tone.offset, tone.duration, tone.volume);
-  });
-
-  notifyUser(phase === 'work' ? 'Work session complete' : 'Break time is up');
-}
-
-function toggleMute() {
-  isMuted = !isMuted;
-  muteBtn.textContent = isMuted ? '🔇 Muted' : '🔊 Sound On';
-  muteBtn.setAttribute('aria-pressed', String(isMuted));
-  persistState();
+  updateModeButtonState();
 }
 
 function toggle24HourMode() {
   is24HourMode = !is24HourMode;
-  modeToggle.textContent = is24HourMode ? 'Standard 20m' : '24h Mode';
+  modeToggle.textContent = is24HourMode ? '24h On' : '24h Mode';
   modeToggle.setAttribute('aria-pressed', String(is24HourMode));
+
+  if (isStopwatchMode) {
+    isStopwatchMode = false;
+    stopwatchToggle.textContent = 'Stopwatch';
+    stopwatchToggle.setAttribute('aria-pressed', 'false');
+  }
 
   if (is24HourMode) {
     customPanel.classList.remove('hidden');
@@ -368,6 +298,7 @@ function toggle24HourMode() {
   }
 
   updateDisplay();
+  updateModeButtonState();
 }
 
 function togglePhase() {
@@ -378,6 +309,7 @@ function togglePhase() {
   startBtn.textContent = 'Start';
   setTimerByMinutes(nextMinutes, true);
   updateDisplay();
+  updateModeButtonState();
 }
 
 function updateBreakDuration() {
@@ -474,233 +406,57 @@ function initializeCustomPreset() {
 
 function initializeFromStorage() {
   const saved = getSavedState();
+  if (saved) {
+    totalSeconds = Number(saved.totalSeconds) || DEFAULT_WORK_SECONDS;
+    remainingSeconds = Number(saved.remainingSeconds) || totalSeconds;
+    isMuted = !!saved.isMuted;
+    is24HourMode = !!saved.is24HourMode;
+    phase = saved.phase === 'break' ? 'break' : 'work';
+    darkMode = saved.darkMode !== false;
+    sessionCount = Number(saved.sessionCount) || 0;
+    breakMinutes = Number(saved.breakMinutes) || DEFAULT_BREAK_MINUTES;
+    customPresetMinutes = Number(saved.customPresetMinutes) || null;
+    focusMode = !!saved.focusMode;
+    soundMode = saved.soundMode || 'classic';
+    isStopwatchMode = !!saved.isStopwatchMode;
 
-  if (!saved) {
-    setTheme(true);
-    setFocusMode(false);
-    setTimerByMinutes(DEFAULT_WORK_MINUTES, true);
-    updateDisplay();
-    return;
-  }
-
-  darkMode = !!saved.darkMode;
-  isMuted = !!saved.isMuted;
-  is24HourMode = !!saved.is24HourMode;
-  phase = saved.phase || 'work';
-  sessionCount = Number(saved.sessionCount) || 0;
-  breakMinutes = Number(saved.breakMinutes) || DEFAULT_BREAK_MINUTES;
-  customPresetMinutes = saved.customPresetMinutes || null;
-  focusMode = !!saved.focusMode;
-  soundMode = saved.soundMode || 'classic';
-
-  setTheme(darkMode);
-  setFocusMode(focusMode);
-  muteBtn.textContent = isMuted ? '🔇 Muted' : '🔊 Sound On';
-  muteBtn.setAttribute('aria-pressed', String(isMuted));
-
-  modeToggle.textContent = is24HourMode ? 'Standard 20m' : '24h Mode';
-  modeToggle.setAttribute('aria-pressed', String(is24HourMode));
-  customPanel.classList.toggle('hidden', !is24HourMode);
-
-  breakMinutesInput.value = String(breakMinutes);
-  soundPicker.value = soundMode;
-  totalSeconds = Number(saved.totalSeconds) || DEFAULT_WORK_SECONDS;
-  remainingSeconds = Number(saved.remainingSeconds) || totalSeconds;
-
-  const currentPreset = Number(saved.currentPresetMinutes) || DEFAULT_WORK_MINUTES;
-  updatePresetButtons(currentPreset);
-
-  if (customPresetMinutes) {
-    const existingCustom = document.querySelector('.preset-button[data-custom="true"][data-minutes="' + customPresetMinutes + '"]');
-    if (!existingCustom) {
-      const button = createCustomPresetButton(customPresetMinutes, `${customPresetMinutes} min`, true);
-      document.querySelector('.preset-row').appendChild(button);
+    if (saved.currentPresetMinutes) {
+      updatePresetButtons(Number(saved.currentPresetMinutes));
     }
   }
 
-  if (is24HourMode) {
+  setTheme(darkMode);
+  setFocusMode(focusMode);
+  toggleMute();
+  updateBreakDuration();
+  modeToggle.textContent = is24HourMode ? 'Standard 20m' : '24h Mode';
+  modeToggle.setAttribute('aria-pressed', String(is24HourMode));
+  stopwatchToggle.textContent = isStopwatchMode ? 'Countdown' : 'Stopwatch';
+  stopwatchToggle.setAttribute('aria-pressed', String(isStopwatchMode));
+
+  if (isStopwatchMode) {
+    setStopwatchMode(true);
+  } else if (is24HourMode) {
+    customPanel.classList.remove('hidden');
     const hours = Math.floor(remainingSeconds / 3600);
     const minutes = Math.floor((remainingSeconds % 3600) / 60);
     const seconds = remainingSeconds % 60;
     hoursInput.value = hours;
     minutesInput.value = minutes;
     secondsInput.value = seconds;
+  } else {
+    setTimerByMinutes(Math.max(1, Math.ceil(remainingSeconds / 60)), true);
   }
 
   updateDisplay();
 }
 
-function installPwa() {
-  if (!deferredPrompt) {
-    return;
-  }
-
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(() => {
-    deferredPrompt = null;
-  });
-}
-
-function openTimeEditor() {
-  const total = remainingSeconds;
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = total % 60;
-
-  editorHours.value = String(hours);
-  editorMinutes.value = String(minutes);
-  editorSeconds.value = String(seconds);
-  customTimeEditor.classList.remove('hidden');
-}
-
-function closeEditor() {
-  customTimeEditor.classList.add('hidden');
-}
-
-function applyCustomTime() {
-  const hours = clamp(Number(editorHours.value) || 0, 0, 23);
-  const minutes = clamp(Number(editorMinutes.value) || 0, 0, 59);
-  const seconds = clamp(Number(editorSeconds.value) || 0, 0, 59);
-
-  editorHours.value = String(hours);
-  editorMinutes.value = String(minutes);
-  editorSeconds.value = String(seconds);
-
-  totalSeconds = hours * 3600 + minutes * 60 + seconds;
-  if (totalSeconds <= 0) {
-    totalSeconds = DEFAULT_WORK_SECONDS;
-  }
-
-  remainingSeconds = totalSeconds;
-  is24HourMode = false;
-  customPanel.classList.add('hidden');
-  modeToggle.textContent = '24h Mode';
-  modeToggle.setAttribute('aria-pressed', 'false');
-  phase = 'work';
-  stopCountdown();
-  startBtn.textContent = 'Start';
-  updateDisplay();
-  closeEditor();
-}
-
-function refreshAppIfNeeded() {
-  if (updateBanner) {
-    updateBanner.classList.remove('hidden');
-    setTimeout(() => {
-      window.location.reload();
-    }, 1200);
-  }
-}
-
-function setBackgroundPreview(url) {
-  if (!backgroundPreview) return;
-
-  if (url && url.trim()) {
-    backgroundPreview.style.backgroundImage = `url("${url.trim()}")`;
-    backgroundPreview.style.backgroundColor = 'transparent';
-  } else {
-    backgroundPreview.style.backgroundImage = 'none';
-    backgroundPreview.style.backgroundColor = 'rgba(60, 185, 167, 0.18)';
-  }
-}
-
-function persistBackgroundState() {
-  try {
-    localStorage.setItem(BACKGROUND_KEY, JSON.stringify({
-      imageUrl: backgroundImageUrl,
-      useWallpaper: shouldUseWallpaper
-    }));
-  } catch (error) {
-    // ignore storage errors silently
-  }
-}
-
-function setBackgroundImage(imageUrl) {
-  const cleanUrl = imageUrl && imageUrl.trim() ? imageUrl.trim() : '';
-  backgroundImageUrl = cleanUrl;
-
-  if (!shouldUseWallpaper || !cleanUrl) {
-    document.body.style.background = 'black';
-    document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
-    document.body.style.backgroundRepeat = 'no-repeat';
-    document.body.style.backgroundAttachment = 'fixed';
-  } else {
-    document.body.style.background = `url("${cleanUrl}")`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
-    document.body.style.backgroundRepeat = 'no-repeat';
-    document.body.style.backgroundAttachment = 'fixed';
-  }
-
-  setBackgroundPreview(cleanUrl);
-  persistBackgroundState();
-}
-
-function applyBackgroundFromUrl() {
-  const imageUrl = backgroundUrlInput.value.trim();
-  if (!imageUrl) {
-    setBackgroundImage('');
-    return;
-  }
-
-  setBackgroundImage(imageUrl);
-}
-
-function applyBackgroundFile(file) {
-  if (!file || !file.type.startsWith('image/')) {
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const result = typeof event.target?.result === 'string' ? event.target.result : '';
-    backgroundUrlInput.value = result;
-    setBackgroundImage(result);
-  };
-  reader.readAsDataURL(file);
-}
-
-function resetBackgroundImage() {
-  backgroundUrlInput.value = '';
-  setBackgroundImage('');
-  if (backgroundUploadInput) {
-    backgroundUploadInput.value = '';
-  }
-}
-
-function applyBackgroundPreference() {
-  shouldUseWallpaper = !!backgroundWallpaperToggle.checked;
-  setBackgroundImage(backgroundImageUrl);
-}
-
-function restoreBackgroundState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(BACKGROUND_KEY) || 'null');
-    if (!saved) {
-      shouldUseWallpaper = true;
-      backgroundWallpaperToggle.checked = true;
-      setBackgroundImage('');
-      return;
-    }
-
-    shouldUseWallpaper = saved.useWallpaper !== false;
-    backgroundWallpaperToggle.checked = shouldUseWallpaper;
-    if (saved.imageUrl) {
-      backgroundUrlInput.value = saved.imageUrl;
-      setBackgroundImage(saved.imageUrl);
-    } else {
-      setBackgroundImage('');
-    }
-  } catch (error) {
-    shouldUseWallpaper = true;
-    backgroundWallpaperToggle.checked = true;
-    setBackgroundImage('');
-  }
-}
+stopwatchToggle.addEventListener('click', () => {
+  setStopwatchMode(!isStopwatchMode);
+});
 
 window.addEventListener('DOMContentLoaded', () => {
+  restorePanelLayout();
   restoreBackgroundState();
 });
 

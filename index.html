@@ -30,7 +30,7 @@
     </div>
 
     <main class="app-shell">
-        <section class="timer-panel">
+        <section id="timerPanel" class="timer-panel" aria-label="Pomodoro timer panel">
             <header class="top-bar">
                 <div class="brand-block">
                     <span class="brand-mark">◎</span>
@@ -57,6 +57,8 @@
                 <div class="toggle-row">
                     <button id="phaseToggle" class="mode-button" type="button" aria-pressed="true">Work</button>
                     <button id="modeToggle" class="mode-button" type="button" aria-pressed="false">24h Mode</button>
+                    <button id="stopwatchToggle" class="mode-button" type="button"
+                        aria-pressed="false">Stopwatch</button>
                 </div>
             </div>
 
@@ -106,6 +108,19 @@
                         <label class="background-toggle">
                             <input id="backgroundWallpaperToggle" type="checkbox" checked>
                             <span>Use as wallpaper</span>
+                        </label>
+                    </div>
+                    <div class="background-actions">
+                        <label class="field-group compact-layout">
+                            <span>Preferred layout</span>
+                            <select id="panelLayoutSelect">
+                                <option value="center">Center</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                                <option value="top-left">Top left</option>
+                                <option value="top-right">Top right</option>
+                                <option value="smart">Smart</option>
+                            </select>
                         </label>
                     </div>
                     <div class="background-actions">
