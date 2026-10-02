@@ -39,10 +39,26 @@
 
                 <div class="header-actions">
                     <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle theme">☀️</button>
+                    <button id="backgroundPickerBtn" class="icon-button wallpaper-button" type="button"
+                        aria-label="Choose wallpaper">🖼️</button>
                     <button id="focusToggle" class="icon-button" type="button"
                         aria-label="Toggle focus mode">Focus</button>
                 </div>
             </header>
+
+            <div class="header-toolbar">
+                <div class="controls">
+                    <button id="startBtn" class="primary-button" type="button">Start</button>
+                    <button id="stopBtn" class="secondary-button" type="button">Stop</button>
+                    <button id="resetBtn" class="secondary-button" type="button">Reset</button>
+                    <button id="muteBtn" class="secondary-button" type="button">🔊 Sound On</button>
+                </div>
+
+                <div class="toggle-row">
+                    <button id="phaseToggle" class="mode-button" type="button" aria-pressed="true">Work</button>
+                    <button id="modeToggle" class="mode-button" type="button" aria-pressed="false">24h Mode</button>
+                </div>
+            </div>
 
             <div class="timer-card">
                 <div class="status-row">
@@ -62,18 +78,6 @@
                     <span>Sessions</span>
                     <strong id="sessionCount">0</strong>
                 </div>
-            </div>
-
-            <div class="controls">
-                <button id="startBtn" class="primary-button" type="button">Start</button>
-                <button id="stopBtn" class="secondary-button" type="button">Stop</button>
-                <button id="resetBtn" class="secondary-button" type="button">Reset</button>
-                <button id="muteBtn" class="secondary-button" type="button">🔊 Sound On</button>
-            </div>
-
-            <div class="toggle-row">
-                <button id="phaseToggle" class="mode-button" type="button" aria-pressed="true">Work</button>
-                <button id="modeToggle" class="mode-button" type="button" aria-pressed="false">24h Mode</button>
             </div>
 
             <div class="settings-panel">
@@ -105,9 +109,6 @@
                         </label>
                     </div>
                     <div class="background-actions">
-                        <button id="backgroundPickerBtn" class="upload-button" type="button">
-                            <span>Image Picker</span>
-                        </button>
                         <input id="backgroundUploadInput" type="file" accept="image/*" hidden>
                         <button id="resetBackgroundBtn" class="secondary-button tiny" type="button">Reset</button>
                     </div>
