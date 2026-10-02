@@ -461,26 +461,29 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then((registration) => {
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (!newWorker) return;
+  const isLocalHost = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+  if (!isLocalHost) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then((registration) => {
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
 
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'activated') {
-            refreshAppIfNeeded();
-          }
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'activated') {
+              refreshAppIfNeeded();
+            }
+          });
         });
-      });
-    }).catch(() => undefined);
-  });
+      }).catch(() => undefined);
+    });
 
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'UPDATE_READY') {
-      refreshAppIfNeeded();
-    }
-  });
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'UPDATE_READY') {
+        refreshAppIfNeeded();
+      }
+    });
+  }
 }
 
 window.addEventListener('beforeinstallprompt', (event) => {
