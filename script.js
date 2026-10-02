@@ -38,6 +38,7 @@ const backgroundPickerBtn = document.getElementById('backgroundPickerBtn');
 const panelLayoutSelect = document.getElementById('panelLayoutSelect');
 const timerPanel = document.getElementById('timerPanel');
 const stopwatchToggle = document.getElementById('stopwatchToggle');
+const refreshAppBtn = document.getElementById('refreshAppBtn');
 
 const DEFAULT_WORK_MINUTES = 20;
 const DEFAULT_BREAK_MINUTES = 5;
@@ -619,6 +620,32 @@ backgroundWallpaperToggle.addEventListener('change', applyBackgroundPreference);
 backgroundPickerBtn.addEventListener('click', () => {
   backgroundUploadInput.click();
 });
+
+async function clearAppCacheAndRefresh() {
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+    }
+  } catch (error) {
+    // ignore cache cleanup failures silently
+  }
+
+  try {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((registration) => registration.unregister()));
+    }
+  } catch (error) {
+    // ignore service worker cleanup failures silently
+  }
+
+  window.location.reload();
+}
+
+if (refreshAppBtn) {
+  refreshAppBtn.addEventListener('click', clearAppCacheAndRefresh);
+}
 
 initializeCustomPreset();
 initializeFromStorage();
