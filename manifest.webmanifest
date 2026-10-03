@@ -1,12 +1,11 @@
 {
   "name": "Flow Timer",
   "short_name": "Flow",
-  "description": "Dark-mode pomodoro timer with focus, breaks, presets, and notifications.",
-  "start_url": "/",
+  "description": "Calm pomodoro timer, 24-hour countdown and stopwatch that works offline.",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0f1721",
   "theme_color": "#0f1721",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "icon.svg",
@@ -14,5 +13,6 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "scope": "./"
 }

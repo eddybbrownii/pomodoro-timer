@@ -1,46 +1,53 @@
 # Flow Timer
 
-A calm, yoga-inspired pomodoro countdown timer with a dark theme, work/break flow, sound alerts, local persistence, and installable PWA support.
+A calm pomodoro timer, 24-hour countdown and stopwatch. It runs in the browser, keeps working offline, and can be installed as an app.
+
+**Try it:** https://pomodoro-timer-five-pi.vercel.app/
 
 ## Features
-- 20-minute default focus timer
-- 24-hour reusable countdown mode
-- Work / break toggle with session tracking
-- Custom break duration and quick presets
-- Mute toggle and sound selection
-- Progress ring and browser notifications
-- Mobile responsive layout
-- Offline-friendly behavior with service worker
-- Installable as a standalone app
-- Click-to-edit timer display
+
+- **Pomodoro flow:** a 20, 25 or 45 minute focus session, then a break. Sessions are counted.
+- **24h mode:** count down from any time up to 23:59:59. Save it as a preset.
+- **Stopwatch:** counts up.
+- **Accurate timing:** the timer uses the clock, not tick counting, so it stays correct in a background tab and keeps running if you reload.
+- **Alerts:** a choice of three sounds plus a browser notification when time is up.
+- **Your settings are remembered:** theme, sound, break length, presets and wallpaper.
+- **Focus mode:** hides everything except the timer.
+- **Wallpaper:** use any image URL or upload a picture.
+- **Keyboard:** <kbd>Space</kbd> starts and stops, <kbd>R</kbd> resets, <kbd>Esc</kbd> closes the editor. Tap the time to set a custom duration.
+- **Works offline:** you can install it from the browser's install button or the address bar.
 
 ## Run locally
 
+No build step. Serve the folder with any static server:
+
 ```bash
-cd /Users/eddybrownii/pomodoro-timer
-python3 -m http.server 8000
+npm start            # or: python3 -m http.server 8000
 ```
 
-Then open:
+Then open http://localhost:8000.
 
-```text
-http://localhost:8000
+## Test
+
+The smoke test opens the app in headless Chromium and checks startup, countdown, stopwatch, reload persistence and offline loading.
+
+```bash
+npm install
+npx playwright install chromium   # first time only
+npm test
 ```
 
 ## Project structure
 
-- `index.html` — app structure
-- `styles.css` — styling and responsive design
-- `script.js` — timer logic and interactions
-- `manifest.webmanifest` — PWA manifest
-- `sw.js` — service worker
-- `icon.svg` — app icon
+| File | Purpose |
+| --- | --- |
+| `index.html` | App markup |
+| `styles.css` | Styling, light and dark themes, screen positions |
+| `script.js` | Timer logic, settings and keyboard shortcuts |
+| `sw.js` | Service worker for offline use (network-first) |
+| `manifest.webmanifest` | Install metadata |
+| `tests/smoke.js` | Browser smoke test |
 
-## GitHub
+## Deploying
 
-Create a GitHub repository and then run:
-
-```bash
-git remote add origin git@github.com:<YOUR_USERNAME>/<YOUR_REPO_NAME>.git
-git push -u origin main
-```
+Vercel deploys the `main` branch automatically. Other branches get their own preview URL.
