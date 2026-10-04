@@ -1,18 +1,22 @@
-const CACHE_NAME = 'flow-timer-v2';
+// Network-first: always try to load the latest version, and fall back to the
+// cached copy only when offline. Bump CACHE_NAME when the asset list changes.
+const CACHE_NAME = 'flow-timer-v5';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/script.js',
-  '/manifest.webmanifest',
-  '/icon.svg',
+  './',
+  './index.html',
+  './styles.css',
+  './script.js',
+  './manifest.webmanifest',
+  './icon.svg',
 ];
 
 self.addEventListener ('install', event => {
   event.waitUntil (
-    caches.open (CACHE_NAME).then (cache => cache.addAll (ASSETS))
+    caches
+      .open (CACHE_NAME)
+      .then (cache => cache.addAll (ASSETS))
+      .then (() => self.skipWaiting ())
   );
-  self.skipWaiting ();
 });
 
 self.addEventListener ('activate', event => {
@@ -26,42 +30,27 @@ self.addEventListener ('activate', event => {
             .map (key => caches.delete (key))
         )
       )
+      .then (() => self.clients.claim ())
   );
-  self.clients.claim ();
-});
-
-self.addEventListener ('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting ();
-  }
 });
 
 self.addEventListener ('fetch', event => {
-  if (event.request.method !== 'GET') return;
+  const request = event.request;
+  if (request.method !== 'GET' || new URL (request.url).origin !== self.location.origin) return;
 
   event.respondWith (
-    caches.match (event.request).then (cached => {
-      if (cached) {
-        return cached;
-      }
-
-      return fetch (event.request).then (response => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+    fetch (request)
+      .then (response => {
+        if (response && response.ok && response.type === 'basic') {
+          const copy = response.clone ();
+          caches.open (CACHE_NAME).then (cache => cache.put (request, copy));
         }
-
-        const copy = response.clone ();
-        caches
-          .open (CACHE_NAME)
-          .then (cache => cache.put (event.request, copy));
         return response;
-      });
-    })
+      })
+      .catch (() =>
+        caches
+          .match (request, {ignoreSearch: true})
+          .then (cached => cached || caches.match ('./index.html'))
+      )
   );
-});
-
-self.addEventListener ('controllerchange', () => {
-  self.clients.matchAll ().then (clients => {
-    clients.forEach (client => client.postMessage ({type: 'UPDATE_READY'}));
-  });
 });

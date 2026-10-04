@@ -4,167 +4,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="description" content="A calm pomodoro-style countdown timer for work and rest.">
+    <meta name="theme-color" content="#0f1721">
+    <meta name="description" content="Flow Timer: a calm pomodoro timer, 24-hour countdown and stopwatch that works offline.">
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icon.svg">
     <link rel="stylesheet" href="./styles.css">
     <title>Flow Timer</title>
 </head>
 
-<body data-theme="dark">
-    <div id="splashScreen" class="splash-screen" aria-live="polite">
-        <div class="splash-card">
-            <div class="splash-icon">🧘‍♀️</div>
-            <h1>Flow Timer</h1>
-            <p>Slow down. Breathe. Focus.</p>
-        </div>
-    </div>
-
+<body data-theme="dark" data-layout="center">
     <div id="offlineBanner" class="offline-banner hidden" role="status" aria-live="polite">
         Offline mode active — your timer still works.
     </div>
 
-    <div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite">
-        Update ready — refreshing app...
-    </div>
-
     <main class="app-shell">
-        <section id="timerPanel" class="timer-panel" aria-label="Pomodoro timer panel">
+        <section id="timerPanel" class="timer-panel" aria-label="Flow timer">
             <header class="top-bar">
                 <div class="brand-block">
-                    <span class="brand-mark">◎</span>
+                    <span class="brand-mark" aria-hidden="true"></span>
                     <span class="brand-name">Flow</span>
                 </div>
 
                 <div class="header-actions">
+                    <button id="muteBtn" class="icon-button" type="button" aria-label="Mute sound">🔊</button>
                     <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle theme">☀️</button>
-                    <button id="backgroundPickerBtn" class="icon-button wallpaper-button" type="button"
-                        aria-label="Choose wallpaper">🖼️</button>
-                    <button id="focusToggle" class="icon-button" type="button"
+                    <button id="backgroundPickerBtn" class="icon-button" type="button"
+                        aria-label="Choose wallpaper image">🖼️</button>
+                    <button id="refreshAppBtn" class="icon-button" type="button"
+                        aria-label="Refresh app and clear cache">↻</button>
+                    <button id="focusToggle" class="icon-button text" type="button"
                         aria-label="Toggle focus mode">Focus</button>
                 </div>
             </header>
 
-            <div class="header-toolbar">
-                <div class="controls">
-                    <button id="startBtn" class="primary-button" type="button">Start</button>
-                    <button id="stopBtn" class="secondary-button" type="button">Stop</button>
-                    <button id="resetBtn" class="secondary-button" type="button">Reset</button>
-                    <button id="muteBtn" class="secondary-button" type="button">🔊 Sound On</button>
-                </div>
-
+            <div class="timer-card">
                 <div class="toggle-row">
                     <button id="phaseToggle" class="mode-button" type="button" aria-pressed="true">Work</button>
                     <button id="modeToggle" class="mode-button" type="button" aria-pressed="false">24h Mode</button>
                     <button id="stopwatchToggle" class="mode-button" type="button"
                         aria-pressed="false">Stopwatch</button>
                 </div>
-            </div>
 
-            <div class="timer-card">
-                <div class="status-row">
-                    <span class="status-label">Focus Session</span>
-                </div>
+                <div class="timer-stage">
+                    <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
+                        <circle class="ring-track" cx="110" cy="110" r="100"></circle>
+                        <circle id="progressCircle" class="ring-progress" cx="110" cy="110" r="100"></circle>
+                    </svg>
 
-                <button id="timeDisplay" class="time-display" type="button" aria-label="Edit timer duration">
-                    20:00
-                </button>
-
-                <svg class="progress-ring" width="260" height="260" viewBox="0 0 220 220" aria-hidden="true">
-                    <circle class="ring-bg" cx="110" cy="110" r="100"></circle>
-                    <circle id="progressCircle" class="ring-progress" cx="110" cy="110" r="100"></circle>
-                </svg>
-
-                <div class="session-row">
-                    <span>Sessions</span>
-                    <strong id="sessionCount">0</strong>
-                </div>
-            </div>
-
-            <div class="settings-panel">
-                <label class="field-group">
-                    <span>Break Length (min)</span>
-                    <input id="breakMinutesInput" type="number" min="1" max="60" value="5">
-                </label>
-
-                <label class="field-group">
-                    <span>Sound</span>
-                    <select id="soundPicker">
-                        <option value="classic">Classic</option>
-                        <option value="chime">Chime</option>
-                        <option value="pulse">Pulse</option>
-                    </select>
-                </label>
-
-                <div class="field-group background-control">
-                    <span>Background</span>
-                    <div class="background-input-row">
-                        <input id="backgroundUrlInput" type="url" placeholder="Paste image URL">
-                        <button id="applyBackgroundBtn" class="save-button" type="button">Apply</button>
+                    <div class="timer-inside">
+                        <span class="status-label">Focus Session</span>
+                        <button id="timeDisplay" class="time-display" type="button"
+                            aria-label="Edit timer duration" title="Click to set a custom time">20:00</button>
+                        <span class="session-row">Sessions <strong id="sessionCount">0</strong></span>
                     </div>
-                    <div class="background-preview-wrap">
-                        <span id="backgroundPreview" class="background-preview" title="Background preview"></span>
-                        <label class="background-toggle">
-                            <input id="backgroundWallpaperToggle" type="checkbox" checked>
-                            <span>Use as wallpaper</span>
+                </div>
+
+                <div id="customPanel" class="custom-panel hidden">
+                    <div class="time-inputs">
+                        <label>
+                            <span>H</span>
+                            <input id="hoursInput" type="number" min="0" max="23" value="0">
+                        </label>
+                        <label>
+                            <span>M</span>
+                            <input id="minutesInput" type="number" min="0" max="59" value="20">
+                        </label>
+                        <label>
+                            <span>S</span>
+                            <input id="secondsInput" type="number" min="0" max="59" value="0">
                         </label>
                     </div>
-                    <div class="background-actions">
-                        <label class="field-group compact-layout">
-                            <span>Preferred layout</span>
-                            <select id="panelLayoutSelect">
-                                <option value="center">Center</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
-                                <option value="top-left">Top left</option>
-                                <option value="top-right">Top right</option>
-                                <option value="smart">Smart</option>
-                            </select>
-                        </label>
-                    </div>
-                    <div class="background-actions">
-                        <input id="backgroundUploadInput" type="file" accept="image/*" hidden>
-                        <button id="resetBackgroundBtn" class="secondary-button tiny" type="button">Reset</button>
-                    </div>
+                    <button id="savePresetBtn" class="small-button" type="button">Save as preset</button>
                 </div>
 
-                <div class="custom-timer-panel">
-                    <div class="panel-header">
-                        <span>Custom 24h Timer</span>
-                    </div>
-                    <div id="customPanel" class="custom-panel hidden">
-                        <div class="time-inputs">
-                            <label>
-                                <span>H</span>
-                                <input id="hoursInput" type="number" min="0" max="23" value="0">
-                            </label>
-                            <label>
-                                <span>M</span>
-                                <input id="minutesInput" type="number" min="0" max="59" value="20">
-                            </label>
-                            <label>
-                                <span>S</span>
-                                <input id="secondsInput" type="number" min="0" max="59" value="0">
-                            </label>
+                <div class="controls">
+                    <button id="startBtn" class="action-button primary" type="button">Start</button>
+                    <button id="stopBtn" class="action-button secondary" type="button">Stop</button>
+                    <button id="resetBtn" class="action-button secondary" type="button">Reset</button>
+                </div>
+
+                <div class="preset-row" aria-label="Quick presets">
+                    <button class="preset-button is-active" type="button" data-minutes="20">20 min</button>
+                    <button class="preset-button" type="button" data-minutes="25">25 min</button>
+                    <button class="preset-button" type="button" data-minutes="45">45 min</button>
+                </div>
+
+                <p class="shortcut-hint">Space start/stop · R reset · tap the time to edit</p>
+            </div>
+
+            <details class="settings-panel">
+                <summary>Settings</summary>
+
+                <div class="settings-grid">
+                    <label class="field-group">
+                        <span>Break length (min)</span>
+                        <input id="breakMinutesInput" type="number" min="1" max="60" value="5">
+                    </label>
+
+                    <label class="field-group">
+                        <span>Alert sound</span>
+                        <select id="soundPicker">
+                            <option value="classic">Classic</option>
+                            <option value="chime">Chime</option>
+                            <option value="pulse">Pulse</option>
+                        </select>
+                    </label>
+
+                    <label class="field-group">
+                        <span>Position on screen</span>
+                        <select id="panelLayoutSelect">
+                            <option value="smart">Smart</option>
+                            <option value="center">Center</option>
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                            <option value="top-left">Top left</option>
+                            <option value="top-right">Top right</option>
+                        </select>
+                    </label>
+
+                    <div class="field-group">
+                        <span>Wallpaper</span>
+                        <div class="background-input-row">
+                            <input id="backgroundUrlInput" type="url" placeholder="Paste image URL">
+                            <button id="applyBackgroundBtn" class="small-button" type="button">Apply</button>
                         </div>
-                        <button id="savePresetBtn" class="save-button" type="button">Save preset</button>
+                        <div class="background-preview-wrap">
+                            <span id="backgroundPreview" class="background-preview" title="Wallpaper preview"></span>
+                            <label class="background-toggle">
+                                <input id="backgroundWallpaperToggle" type="checkbox" checked>
+                                <span>Show wallpaper</span>
+                            </label>
+                            <button id="resetBackgroundBtn" class="small-button" type="button">Remove</button>
+                        </div>
+                        <input id="backgroundUploadInput" type="file" accept="image/*" hidden>
                     </div>
                 </div>
+            </details>
 
-                <div class="preset-panel">
-                    <div class="panel-header">
-                        <span>Quick presets</span>
-                    </div>
-                    <div class="preset-row">
-                        <button class="preset-button is-active" type="button" data-minutes="20">20 min</button>
-                        <button class="preset-button" type="button" data-minutes="25">25 min</button>
-                        <button class="preset-button" type="button" data-minutes="45">45 min</button>
-                    </div>
-                </div>
-            </div>
-
-            <button id="installBtn" class="install-button" type="button" style="display:none;">Install app</button>
+            <button id="installBtn" class="action-button install-button" type="button" style="display:none;">Install
+                app</button>
         </section>
     </main>
 
@@ -177,7 +156,7 @@
                     aria-label="Close timer editor">×</button>
             </div>
 
-            <div class="time-inputs compact">
+            <div class="time-inputs">
                 <label>
                     <span>H</span>
                     <input id="editorHours" type="number" min="0" max="23" value="0">
@@ -193,8 +172,8 @@
             </div>
 
             <div class="editor-actions">
-                <button id="cancelTimerBtn" class="secondary-button" type="button">Cancel</button>
-                <button id="applyTimerBtn" class="primary-button" type="button">Apply</button>
+                <button id="cancelTimerBtn" class="action-button secondary" type="button">Cancel</button>
+                <button id="applyTimerBtn" class="action-button primary" type="button">Apply</button>
             </div>
         </div>
     </div>

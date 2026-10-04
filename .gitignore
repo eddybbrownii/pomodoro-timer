@@ -10,3 +10,9 @@ Thumbs.db
 
 # Editor cache
 .vscode/
+
+# Dependencies
+node_modules/
+
+# Separate repo (github.com/eddybbrownii/Self-Timer), not part of this one
+Self-Timer/
